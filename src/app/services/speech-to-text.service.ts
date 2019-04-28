@@ -8,7 +8,7 @@ interface IWindow extends Window {
 
 @Injectable()
 export class SpeechToTextService {
-  recognition  : any
+  recognition: any;
   constructor(private zone: NgZone, private winRefService: WindowRefService) {
     const { webkitSpeechRecognition }: IWindow = <IWindow>window;
     this.recognition = new webkitSpeechRecognition();
@@ -18,8 +18,8 @@ export class SpeechToTextService {
 
   record(language: string): Observable<string> {
     return Observable.create(observer => {
-      this.recognition.onresult = e => this.zone.run( () => { 
-        observer.next(e.results.item(e.results.length -1).item(0).transcript) 
+      this.recognition.onresult = e => this.zone.run( () => {
+        observer.next(e.results.item(e.results.length -1).item(0).transcript)
       });
 
 

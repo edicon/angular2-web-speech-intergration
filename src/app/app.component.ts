@@ -17,10 +17,13 @@ export class AppComponent {
 
   toogleSpeech() {
     this.isSpeechRecogEnabled = !this.isSpeechRecogEnabled;
-    console.log(this.isSpeechRecogEnabled)
+    console.log(this.isSpeechRecogEnabled);
     if (this.isSpeechRecogEnabled) {
       this.speechToText.record('en_US')
-      .subscribe(e => this.title = e)
+      .subscribe(
+        value => this.title = value,
+        error => console.log( error),
+        () => console.log('completed'));
     } else {
       this.speechToText.stop();
     }
