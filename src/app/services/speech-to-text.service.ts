@@ -1,6 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { Observable } from 'rxjs/Rx';
-import { WindowRefService } from './window-ref.service'
+import * as _ from "lodash";
+import { WindowRefService } from './window-ref.service';
 
 interface IWindow extends Window {
   webkitSpeechRecognition:any;
@@ -14,18 +15,48 @@ export class SpeechToTextService {
     this.recognition = new webkitSpeechRecognition();
     this.recognition.continuous = true;
     this.recognition.interimResults = false;
+    this.recognition.maxAlternatives = 1;
    }
 
   record(language: string): Observable<string> {
     return Observable.create(observer => {
-      this.recognition.onresult = e => this.zone.run( () => {
-        observer.next(e.results.item(e.results.length -1).item(0).transcript)
-      });
+      this.recognition.onresult = (speech) => {
+        let info = '';
+        let interimTranscript = '';
+        let finalTranscript = '';
 
+        if (speech.results) {
+            const result = speech.results[speech.resultIndex];
+            const transcript = result[0].transcript;
+            if (result.isFinal) {
+                info = 'finalTranscript';
+                if (result[0].confidence < 0.3) {
+                    console.log("Unrecognized result - Please try again");
+                } else {
+                    finalTranscript = _.trim(transcript);
+                    console.log("Did you said? -> " + finalTranscript + " , If not then say something else...");
+                }
+            } else {
+              info = 'interimTranscript';
+              interimTranscript = _.trim(transcript);
+            }
+        }
+        this.zone.run(() => {
+            observer.next(finalTranscript);
+            /*
+            observer.next({
+              info: info,
+              content: finalTranscript
+            });
+            */
+        });
+      };
 
-      this.recognition.onerror = e => observer.error(e);
+      // TODO: ignoredOnEnd
+      this.recognition.onerror = error => observer.error(error);
       this.recognition.onend = () => observer.complete();
       this.recognition.lang = language;
+
       this.recognition.start();
     });
   }
